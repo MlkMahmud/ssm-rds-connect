@@ -7,13 +7,16 @@
     "constructs": "^10.3.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "cdk:bootstrap": "cdk bootstrap --verbose --debug",
+    "cdk:deploy": "cdk deploy --require-approval never --verbose --debug" 
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^20.11.30",
     "aws-cdk": "^2.133.0",
-    "aws-cdk-lib": "^2.133.0"
+    "aws-cdk-lib": "^2.133.0",
+    "typescript": "^5.4.3"
   }
 }
