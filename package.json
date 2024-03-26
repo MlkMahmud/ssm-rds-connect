@@ -1,0 +1,19 @@
+{
+  "name": "ssm-rds-connect",
+  "description": "Securely connect to Amazon RDS for PostgreSQL with AWS Session Manager and IAM authentication",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "constructs": "^10.3.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "aws-cdk": "^2.133.0",
+    "aws-cdk-lib": "^2.133.0"
+  }
+}
