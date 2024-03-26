@@ -1,4 +1,4 @@
-import { App, Stack, StackProps } from "aws-cdk-lib";
+import { App, CfnOutput, Stack, StackProps, Token } from "aws-cdk-lib";
 import {
   AmazonLinuxCpuType,
   AmazonLinuxImage,
@@ -11,8 +11,9 @@ import {
   Port,
   SecurityGroup,
   SubnetType,
-  Vpc
+  Vpc,
 } from "aws-cdk-lib/aws-ec2";
+import { DockerImageCode } from "aws-cdk-lib/aws-lambda";
 import {
   Credentials,
   DatabaseInstance,
@@ -20,6 +21,8 @@ import {
   DatabaseSecret,
   PostgresEngineVersion,
 } from "aws-cdk-lib/aws-rds";
+import path from "path";
+import RdsInitializer from "./rdsInitializer";
 
 class RootStack extends Stack {
   constructor(scope: App, id: string, props?: StackProps) {
@@ -72,8 +75,13 @@ class RootStack extends Stack {
       vpcSubnets: { subnetType: SubnetType.PRIVATE_ISOLATED },
     });
 
-    const databaseSecret = new DatabaseSecret(this, "database-credentials", {
+    const databaseCreds = new DatabaseSecret(this, "database-credentials", {
       username: "mlkmahmud",
+      dbname: databaseName,
+    });
+
+    const databaseReadonlyCreds = new DatabaseSecret(this, "database-readonly-creds", {
+      username: "readonly",
       dbname: databaseName,
     });
 
@@ -85,7 +93,7 @@ class RootStack extends Stack {
     const databaseInstance = new DatabaseInstance(this, "database", {
       allocatedStorage: 10,
       autoMinorVersionUpgrade: true,
-      credentials: Credentials.fromSecret(databaseSecret),
+      credentials: Credentials.fromSecret(databaseCreds),
       databaseName,
       engine: DatabaseInstanceEngine.postgres({
         version: PostgresEngineVersion.VER_16,
@@ -95,6 +103,15 @@ class RootStack extends Stack {
       storageEncrypted: true,
       vpc,
       vpcSubnets: { subnetType: SubnetType.PRIVATE_ISOLATED },
+    });
+
+    const rdsInitializer = new RdsInitializer(this, "rds-initializer", {
+      fnCode: DockerImageCode.fromImageAsset(path.join(__dirname, "../rdsInitializerCode")),
+      fnEnvironment: {
+        DB_CREDS_SECRET_NAME: databaseCreds.secretName,
+        DB_READONLY_CREDS_SECRET_NAME: databaseReadonlyCreds.secretName,
+      },
+      vpc,
     });
 
     bastionServerSecurityGroup.addEgressRule(
@@ -114,6 +131,22 @@ class RootStack extends Stack {
       Port.tcp(5432),
       "Allow ingress from bastion server"
     );
+
+    databaseInstance.connections.allowFrom(
+      rdsInitializer.handler,
+      Port.tcp(5432),
+      "Allow ingress from RDS Initializer lambda function"
+    );
+
+    databaseCreds.grantRead(rdsInitializer.handler);
+
+    databaseReadonlyCreds.grantRead(rdsInitializer.handler);
+
+    databaseInstance.node.addDependency(rdsInitializer.handler);
+
+    new CfnOutput(this, "rds-initializer-fn-response", {
+      value: Token.asString(rdsInitializer.response),
+    });
   }
 }
 
