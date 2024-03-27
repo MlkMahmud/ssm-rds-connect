@@ -28,7 +28,7 @@ class RdsInitializer extends Construct implements IRdsInitializer {
       memorySize: 256,
       timeout: Duration.minutes(5),
       vpc: props.vpc,
-      vpcSubnets: props.vpc.selectSubnets({ subnetType: SubnetType.PRIVATE_ISOLATED }),
+      vpcSubnets: props.vpc.selectSubnets({ subnetType: SubnetType.PRIVATE_WITH_EGRESS }),
     });
 
     const rdsInitializerProvider = new Provider(this, "provider", {

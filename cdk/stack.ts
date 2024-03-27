@@ -32,7 +32,7 @@ class RootStack extends Stack {
 
     const vpc = new Vpc(this, "vpc", {
       maxAzs: 2,
-      natGateways: 0,
+      natGateways: 1,
       subnetConfiguration: [
         {
           name: "public",
@@ -42,6 +42,10 @@ class RootStack extends Stack {
           name: "private",
           subnetType: SubnetType.PRIVATE_ISOLATED,
         },
+        {
+          name: "compute",
+          subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+        }
       ],
     });
 
