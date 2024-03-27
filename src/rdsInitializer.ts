@@ -26,7 +26,7 @@ class RdsInitializer extends Construct implements IRdsInitializer {
       code: props.fnCode,
       environment: props.fnEnvironment,
       memorySize: 256,
-      timeout: Duration.minutes(1),
+      timeout: Duration.minutes(5),
       vpc: props.vpc,
       vpcSubnets: props.vpc.selectSubnets({ subnetType: SubnetType.PRIVATE_ISOLATED }),
     });
