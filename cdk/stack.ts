@@ -1,4 +1,4 @@
-import { App, CfnOutput, Stack, StackProps, Token } from "aws-cdk-lib";
+import { App, CfnOutput, RemovalPolicy, Stack, StackProps, Token } from "aws-cdk-lib";
 import {
   AmazonLinuxCpuType,
   AmazonLinuxImage,
@@ -105,6 +105,7 @@ class RootStack extends Stack {
       iamAuthentication: true,
       multiAz: false,
       port: 5432,
+      removalPolicy: RemovalPolicy.DESTROY,
       securityGroups: [databaseSecurityGroup],
       storageEncrypted: true,
       vpc,
