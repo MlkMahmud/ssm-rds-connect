@@ -1,5 +1,5 @@
 import { App } from "aws-cdk-lib";
-import RootStack from "./root";
+import RootStack from "./stack";
 
 const app = new App();
 

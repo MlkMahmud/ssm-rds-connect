@@ -3,7 +3,7 @@ import { getPhysicalResourceId, getSecretValue } from "./utils";
 import migrate from "./scripts/migrate";
 import getDatabaseConnection from "./database";
 
-const DB_CREDS_SECRET_NAME = process.env.DB_CREDS || "";
+const { DB_CREDS_SECRET_NAME = "" } = process.env;
 
 interface DatabaseConfig {
   dbname: string;
