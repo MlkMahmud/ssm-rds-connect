@@ -7,6 +7,7 @@ import {
   InstanceSize,
   InstanceType,
   InterfaceVpcEndpointAwsService,
+  IpAddresses,
   Peer,
   Port,
   SecurityGroup,
@@ -33,6 +34,7 @@ class RootStack extends Stack {
     const vpc = new Vpc(this, "vpc", {
       maxAzs: 2,
       natGateways: 1,
+      ipAddresses: IpAddresses.cidr("10.0.0.0/24"),
       subnetConfiguration: [
         {
           name: "public",
@@ -149,7 +151,7 @@ class RootStack extends Stack {
 
     databaseReadonlyCreds.grantRead(rdsInitializer.handler);
 
-    databaseInstance.node.addDependency(rdsInitializer.handler);
+    rdsInitializer.customResource.node.addDependency(databaseInstance);
 
     new CfnOutput(this, "rds-initializer-fn-response", {
       value: Token.asString(rdsInitializer.response),
