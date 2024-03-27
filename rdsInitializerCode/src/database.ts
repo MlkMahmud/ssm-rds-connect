@@ -1,6 +1,7 @@
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 import path from "path";
+import { readFileSync } from "fs";
 
 function getDatabaseConnection(connectionString: string) {
   return new Kysely({
@@ -9,7 +10,7 @@ function getDatabaseConnection(connectionString: string) {
         connectionString,
         max: 1,
         ssl: {
-          ca: path.join(__dirname, "../rds-cert.pem"),
+          ca: readFileSync(path.join(__dirname, "../rds-cert.pem"), { encoding: "utf-8" }),
         },
       }),
     }),
