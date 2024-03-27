@@ -20,7 +20,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
     case "Create":
     case "Update": {
       const { dbname, host, password, port, username } = await getSecretValue<DatabaseConfig>(DB_CREDS_SECRET_NAME);
-      const database = getDatabaseConnection(`postgres://${username}:${password}@${host}:${port}/${dbname}`);
+      const database = getDatabaseConnection(`postgresql://${username}:${password}@${host}:${port}/${dbname}`);
       await migrate(database);
       await database.destroy();
 

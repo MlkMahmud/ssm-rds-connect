@@ -28,7 +28,7 @@ class RootStack extends Stack {
   constructor(scope: App, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const databaseName = "postgres";
+    const databaseName = "main";
 
     const vpc = new Vpc(this, "vpc", {
       maxAzs: 2,
@@ -102,7 +102,9 @@ class RootStack extends Stack {
       engine: DatabaseInstanceEngine.postgres({
         version: PostgresEngineVersion.VER_16,
       }),
+      iamAuthentication: true,
       multiAz: false,
+      port: 5432,
       securityGroups: [databaseSecurityGroup],
       storageEncrypted: true,
       vpc,
