@@ -1,4 +1,4 @@
-import { App, CfnOutput, RemovalPolicy, Stack, StackProps, Token } from "aws-cdk-lib";
+import { App, CfnOutput, Duration, RemovalPolicy, Stack, StackProps, Token } from "aws-cdk-lib";
 import {
   AmazonLinuxCpuType,
   AmazonLinuxImage,
@@ -99,6 +99,7 @@ class RootStack extends Stack {
     const databaseInstance = new DatabaseInstance(this, "database", {
       allocatedStorage: 10,
       autoMinorVersionUpgrade: true,
+      backupRetention: Duration.days(0),
       credentials: Credentials.fromSecret(databaseCreds),
       databaseName,
       engine: DatabaseInstanceEngine.postgres({
