@@ -19,7 +19,7 @@ async function main(db: Kysely<unknown>, config: Config) {
     await sql.raw(`GRANT SELECT ON ALL TABLES IN SCHEMA public TO ${ROLE_NAME}`).execute(trx);
     await sql
       .raw(
-        `ALTER DEFAULT PRIVILEGES FOR USER ${config.admin_username} IN SCHEMA public GRANT SELECT ON TABLES TO ${config.username}`
+        `ALTER DEFAULT PRIVILEGES FOR USER ${config.admin_username} IN SCHEMA public GRANT SELECT ON TABLES TO ${ROLE_NAME}`
       )
       .execute(trx);
     await sql.raw(`CREATE USER ${config.username} WITH PASSWORD '${config.password}'`).execute(trx);
