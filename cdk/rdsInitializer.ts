@@ -1,7 +1,7 @@
 import { CustomResource, Duration, Reference, RemovalPolicy } from "aws-cdk-lib";
 import { SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
 import { DockerImageCode, DockerImageFunction, Function as LambdaFunction } from "aws-cdk-lib/aws-lambda";
-import { LogGroup } from "aws-cdk-lib/aws-logs";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Provider } from "aws-cdk-lib/custom-resources";
 import { Construct } from "constructs";
 
@@ -40,6 +40,7 @@ class RdsInitializer extends Construct implements IRdsInitializer {
     new LogGroup(this, "log-group", {
       logGroupName: `/aws/lambda/${this.handler.functionName}`,
       removalPolicy: RemovalPolicy.DESTROY,
+      retention: RetentionDays.ONE_DAY,
     });
 
     this.customResource = new CustomResource(this, "custom-resource", {
