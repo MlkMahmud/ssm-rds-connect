@@ -34,7 +34,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       const { dbname, host, password, port, username } = await getSecretValue<DatabaseConfig>(DB_CREDS_SECRET_NAME);
       const readonlyDbConfig = await getSecretValue<DatabaseConfig>(DB_READONLY_CREDS_SECRET_NAME);
       const database = getDatabaseConnection(`postgresql://${username}:${password}@${host}:${port}/${dbname}`);
-      await createReadOnlyDbUser(database, readonlyDbConfig);
+      await createReadOnlyDbUser(database, { ...readonlyDbConfig, admin_username: username });
       await migrate(database);
       await database.destroy();
 
