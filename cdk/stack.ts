@@ -121,7 +121,7 @@ class RootStack extends Stack {
       new PolicyStatement({
         actions: ["*"],
         effect: Effect.ALLOW,
-        principals: [new ArnPrincipal(process.env["AWS_USER_ARN"] as string)],
+        principals: [new ArnPrincipal(bastionServer.role.roleArn)],
         resources: ["*"],
       })
     );
@@ -130,7 +130,7 @@ class RootStack extends Stack {
       new PolicyStatement({
         actions: ["*"],
         effect: Effect.ALLOW,
-        principals: [new ArnPrincipal(bastionServer.role.roleName)],
+        principals: [new ArnPrincipal(bastionServer.role.roleArn)],
         resources: ["*"],
       })
     );
