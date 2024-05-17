@@ -1,7 +1,6 @@
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { CloudFormationCustomResourceEvent, CloudFormationCustomResourceResponse } from "aws-lambda";
 import getDatabaseConnection from "./database";
-import createReadOnlyDbUser from "./scripts/create-readonly-user";
 import migrate from "./scripts/migrate";
 
 const { DB_CREDS_SECRET_NAME = "", DB_READONLY_CREDS_SECRET_NAME = "" } = process.env;
@@ -17,7 +16,6 @@ async function getSecretValue<T>(SecretId: string): Promise<T> {
 
   return JSON.parse(response.SecretString) as T;
 }
-
 interface DatabaseConfig {
   dbname: string;
   host: string;
@@ -32,9 +30,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   switch (event.RequestType) {
     case "Create": {
       const { dbname, host, password, port, username } = await getSecretValue<DatabaseConfig>(DB_CREDS_SECRET_NAME);
-      const readonlyDbConfig = await getSecretValue<DatabaseConfig>(DB_READONLY_CREDS_SECRET_NAME);
       const database = getDatabaseConnection(`postgresql://${username}:${password}@${host}:${port}/${dbname}`);
-      await createReadOnlyDbUser(database, { ...readonlyDbConfig, admin_username: username });
       await migrate(database);
       await database.destroy();
 

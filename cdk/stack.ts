@@ -14,6 +14,7 @@ import {
   SubnetType,
   Vpc,
 } from "aws-cdk-lib/aws-ec2";
+import { ArnPrincipal, Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { DockerImageCode } from "aws-cdk-lib/aws-lambda";
 import {
   Credentials,
@@ -47,16 +48,16 @@ class RootStack extends Stack {
         {
           name: "compute",
           subnetType: SubnetType.PRIVATE_WITH_EGRESS,
-        }
+        },
       ],
     });
 
-    vpc.addInterfaceEndpoint("ssm", {
+    const ssmInterfaceEndpoint = vpc.addInterfaceEndpoint("ssm", {
       service: InterfaceVpcEndpointAwsService.SSM,
       subnets: { subnetType: SubnetType.PRIVATE_ISOLATED },
     });
 
-    vpc.addInterfaceEndpoint("ssm-messages", {
+    const ssmMessagesInterfaceEndpoint = vpc.addInterfaceEndpoint("ssm-messages", {
       service: InterfaceVpcEndpointAwsService.SSM_MESSAGES,
       subnets: { subnetType: SubnetType.PRIVATE_ISOLATED },
     });
@@ -68,7 +69,7 @@ class RootStack extends Stack {
     });
 
     // bastion server
-    new Instance(this, "bastion-server", {
+    const bastionServer = new Instance(this, "bastion-server", {
       associatePublicIpAddress: false,
       instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.MICRO),
       machineImage: new AmazonLinuxImage({
@@ -83,11 +84,6 @@ class RootStack extends Stack {
 
     const databaseCreds = new DatabaseSecret(this, "database-credentials", {
       username: "mlkmahmud",
-      dbname: databaseName,
-    });
-
-    const databaseReadonlyCreds = new DatabaseSecret(this, "database-readonly-creds", {
-      username: "readonly",
       dbname: databaseName,
     });
 
@@ -117,12 +113,27 @@ class RootStack extends Stack {
 
     const rdsInitializer = new RdsInitializer(this, "rds-initializer", {
       fnCode: DockerImageCode.fromImageAsset(path.join(__dirname, "../rdsInitializerCode")),
-      fnEnvironment: {
-        DB_CREDS_SECRET_NAME: databaseCreds.secretName,
-        DB_READONLY_CREDS_SECRET_NAME: databaseReadonlyCreds.secretName,
-      },
+      fnEnvironment: { DB_CREDS_SECRET_NAME: databaseCreds.secretName },
       vpc,
     });
+
+    ssmInterfaceEndpoint.addToPolicy(
+      new PolicyStatement({
+        actions: ["*"],
+        effect: Effect.ALLOW,
+        principals: [new ArnPrincipal(process.env["AWS_USER_ARN"] as string)],
+        resources: ["*"],
+      })
+    );
+
+    ssmMessagesInterfaceEndpoint.addToPolicy(
+      new PolicyStatement({
+        actions: ["*"],
+        effect: Effect.ALLOW,
+        principals: [new ArnPrincipal(bastionServer.role.roleName)],
+        resources: ["*"],
+      })
+    );
 
     bastionServerSecurityGroup.addEgressRule(
       Peer.ipv4(vpc.vpcCidrBlock),
@@ -149,8 +160,6 @@ class RootStack extends Stack {
     );
 
     databaseCreds.grantRead(rdsInitializer.handler);
-
-    databaseReadonlyCreds.grantRead(rdsInitializer.handler);
 
     rdsInitializer.customResource.node.addDependency(databaseInstance);
 
