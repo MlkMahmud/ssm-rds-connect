@@ -2,6 +2,7 @@ import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-sec
 import { CloudFormationCustomResourceEvent, CloudFormationCustomResourceResponse } from "aws-lambda";
 import getDatabaseConnection from "./database";
 import migrate from "./scripts/migrate";
+import createIAMUsers from "./scripts/create-iam-users";
 
 const { DB_CREDS_SECRET_NAME = "", DB_READONLY_CREDS_SECRET_NAME = "" } = process.env;
 const client = new SecretsManagerClient();
@@ -48,6 +49,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       const { dbname, host, password, port, username } = await getSecretValue<DatabaseConfig>(DB_CREDS_SECRET_NAME);
       const database = getDatabaseConnection(`postgresql://${username}:${password}@${host}:${port}/${dbname}`);
       await migrate(database);
+      await createIAMUsers(database, { username: "malik", dbname });
       await database.destroy();
 
       return {
